@@ -35,7 +35,8 @@ router.get('/:id', (req, res) => {
         })
 })
 
-router.post('/', (req, res) => {
+router.post('/', checkNewAcct, (req, res) => {
+    const acctData = req.body
     db('accounts').insert(acctData)
         .then(accts => {
             res.status(201).json({ newAcct: accts[0] })
@@ -52,7 +53,7 @@ router.put('/:id', (req, res) => {
     const { id } = req.params
     const changes = req.body
 
-    db('accounts').where({ id }).updates(changes)
+    db('accounts').where({ id }).update(changes)
         .then(count => {
             if (count) {
                 res.json({ updated: count })
@@ -88,4 +89,21 @@ router.delete('/:id', (req, res) => {
             })
         })
 })
+
+// middleware function, checks if the account body and name are present in the request to post a new account
+function checkNewAcct(req, res, next) {
+    if(!req.body.name) {
+        res.status(404).json({
+            message: 'an account name is required'
+        })
+    } else if(!req.body.budget) {
+        res.status(404).json({
+            message: 'an account budget is required'
+        })
+    } else if(req.body.name && req.body.budget) {
+        next()
+    } else {
+        return
+    }
+}
 module.exports = router
